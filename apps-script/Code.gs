@@ -3,7 +3,7 @@ const SPREADSHEET_ID = '1RukQXEHcSTDYH4O9nRKa4qVie6UDi84hGGOJxKQLqgE';
 const SHEET_NAME = 'ชีต1';
 const HEADERS = { district: 'เขต', account: 'Account', name: 'ชื่อร้าน', branch: 'รหัสสาขา', sku: 'SKU', value: 'ซื้อออกแล้ว' };
 
-function doGet() { return reply_({ ok: true, service: 'SME SUPNUT API' }); }
+function doGet(e) { return e && e.parameter.action === 'list' ? reply_({ ok: true, rows: list_() }) : reply_({ ok: true, service: 'SME SUPNUT API' }); }
 function doPost(e) {
   try {
     const body = JSON.parse((e.postData && e.postData.contents) || '{}');

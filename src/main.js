@@ -18,7 +18,19 @@ const dialog = $('#entryDialog'); let activeRow;
 function unique(key, rows = state.rows) { return [...new Set(rows.map(r => r[key]).filter(Boolean))].sort((a,b) => a.localeCompare(b, 'th')); }
 function optionize(select, values, first) { const keep = select.value; select.innerHTML = `<option value="">${first}</option>${values.map(v => `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`).join('')}`; select.value = values.includes(keep) ? keep : ''; }
 function escapeHtml(value) { return String(value).replace(/[&<>'"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c])); }
-function setupFilters() { optionize($('#district'), unique('district'), 'ทุกเขต'); if (state.filters.district && unique('district').includes(state.filters.district)) $('#district').value = state.filters.district; optionize($('#account'), unique('account'), 'ทุก Account'); $('#status').value = state.filters.status; $('#query').value = state.filters.query; render(); }
+function setupFilters() {
+  const districts = unique('district');
+  const accounts = unique('account');
+  if (!districts.includes(state.filters.district)) state.filters.district = '';
+  if (!accounts.includes(state.filters.account)) state.filters.account = '';
+  optionize($('#district'), districts, 'ทุกเขต');
+  $('#district').value = state.filters.district;
+  optionize($('#account'), accounts, 'ทุก Account');
+  $('#account').value = state.filters.account;
+  $('#status').value = state.filters.status;
+  $('#query').value = state.filters.query;
+  render();
+}
 function render() { const rows = filterRows(state.rows, state.filters); $('#count').textContent = `${rows.length} รายการ`; $('#results').innerHTML = rows.length ? rows.map(r => `<article class="card"><div class="tag">${escapeHtml(r.district)} · ${escapeHtml(r.account)}</div><h2>${escapeHtml(r.name)}</h2><p class="branch">สาขา ${escapeHtml(r.branch)}</p><p class="sku">${escapeHtml(r.sku || '—')}</p><div class="card-footer"><span class="${r.value !== '' ? 'complete' : 'pending'}">${r.value !== '' ? `ซื้อออกแล้ว: ${escapeHtml(r.value)}` : 'ยังไม่กรอก'}</span><button class="button primary entry" data-id="${escapeHtml(r.identity)}" type="button">${r.value !== '' ? 'แก้ไข' : 'กรอกข้อมูล'}</button></div></article>`).join('') : '<div class="empty">ไม่พบร้านที่ตรงกับเงื่อนไข</div>'; document.querySelectorAll('.entry').forEach(b => b.addEventListener('click', () => openEntry(b.dataset.id))); }
 function openEntry(id) { activeRow = state.rows.find(r => r.identity === id); if (!activeRow) return; $('#entryTitle').textContent = activeRow.name; $('#entryDetails').innerHTML = `<div><dt>เขต</dt><dd>${escapeHtml(activeRow.district)}</dd></div><div><dt>Account</dt><dd>${escapeHtml(activeRow.account)}</dd></div><div><dt>รหัสสาขา</dt><dd>${escapeHtml(activeRow.branch)}</dd></div>`; const input = $('#value'); const label = $('#valueLabel span'); input.value = activeRow.value; input.type = config.valueMode === 'status' ? 'text' : 'text'; input.inputMode = config.valueMode === 'quantity' ? 'numeric' : 'text'; label.textContent = config.valueMode === 'status' ? 'สถานะ (ซื้อแล้ว / ยังไม่ซื้อ)' : config.valueMode === 'text' ? 'ข้อมูลซื้อออกแล้ว' : 'จำนวนที่ซื้อออก'; $('#formError').hidden = true; dialog.showModal(); input.focus(); }
 async function load() { $('#notice').textContent = 'กำลังโหลดข้อมูล…'; try { const data = await request(config.apiUrl, '', 'list'); state.rows = data.rows; state.demo = false; $('#notice').textContent = `อัปเดตล่าสุด ${new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'})}`; } catch (error) { state.rows = demoRows; state.demo = true; $('#notice').textContent = `โหมดตัวอย่าง: ${error.message}`; } setupFilters(); }

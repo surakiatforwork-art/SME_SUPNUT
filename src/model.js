@@ -4,10 +4,8 @@ export function filterRows(rows, { district = '', account = '', status = '', que
     && (!status || (status === 'done' ? r.value !== '' : r.value === ''))
     && words.every(w => [r.district, r.account, r.name, r.branch].join(' ').toLocaleLowerCase('th').includes(w)));
 }
-export function validateValue(value, mode) {
-  if (mode === 'quantity' && !/^(0|[1-9]\d{0,6})$/.test(value)) throw new Error('กรุณากรอกจำนวนเต็มตั้งแต่ 0 ถึง 9,999,999');
-  if (mode === 'status' && !['ซื้อแล้ว', 'ยังไม่ซื้อ'].includes(value)) throw new Error('กรุณาเลือกสถานะ');
-  if (mode === 'text' && (!value.trim() || value.length > 200 || /^[=+@-]/.test(value))) throw new Error('กรอกข้อความ 1–200 ตัวอักษร และไม่ขึ้นต้นด้วย = + - @');
+export function validateValue(value) {
+  if (!['ซื้อแล้ว 2', 'ซื้อแล้ว 1', 'ของหมด'].includes(value)) throw new Error('กรุณาเลือกสถานะการซื้อ');
   return value;
 }
 export function readPreference(storage, key, fallback = '') { try { return storage.getItem(key) ?? fallback; } catch { return fallback; } }

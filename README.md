@@ -1,6 +1,6 @@
 # SME SUPNUT
 
-เว็บสำหรับค้นหาร้านตามเขต, Account, ชื่อร้าน หรือรหัสสาขา และบันทึกจำนวนลงคอลัมน์ **ซื้อออกแล้ว** ใน Google Sheet.
+เว็บสำหรับค้นหาร้านตามเขต, Account, ชื่อร้าน หรือรหัสสาขา และบันทึกสถานะลงคอลัมน์ **ซื้อออกแล้ว** ใน Google Sheet. สถานะมี 3 ค่า: `ซื้อแล้ว 2`, `ซื้อแล้ว 1`, และ `ของหมด`.
 
 ## เริ่มใช้งาน
 
@@ -8,5 +8,3 @@
 2. Deploy → New deployment → **Web app**. เลือก Execute as: Me และ Who has access: **Anyone**. คัดลอก URL ที่ลงท้าย `/exec`. ทุกครั้งที่แก้ `Code.gs` ให้สร้าง deployment version ใหม่ก่อนใช้งาน.
 3. วาง URL ใน `public/config.js` ที่ `apiUrl`.
 4. Push ขึ้น GitHub แล้วเปิด Settings → Pages → Build and deployment: **GitHub Actions**. Workflow ใน repository นี้จะเผยแพร่ให้โดยอัตโนมัติ.
-
-ค่า `valueMode` ใน `public/config.js` เป็น `quantity` ตามค่าเริ่มต้น; เปลี่ยนเป็น `status` หรือ `text` ได้ โดยต้องแก้เงื่อนไขตรวจค่าใน Apps Script ให้ตรงกันด้วย.

@@ -34,7 +34,7 @@ function list_() {
 }
 function save_(body) {
   if (!body.identity || typeof body.value !== 'string') throw new Error('ข้อมูลไม่ครบถ้วน');
-  if (!/^(0|[1-9]\d{0,6})$/.test(body.value)) throw new Error('จำนวนต้องเป็นเลขจำนวนเต็ม 0–9,999,999');
+  if (!['ซื้อแล้ว 2', 'ซื้อแล้ว 1', 'ของหมด'].includes(body.value)) throw new Error('กรุณาเลือกสถานะการซื้อ');
   const decoded = Utilities.newBlob(Utilities.base64DecodeWebSafe(body.identity)).getDataAsString().split('|');
   const row = Number(decoded[0]);
   const branch = decodeURIComponent(decoded[1]);

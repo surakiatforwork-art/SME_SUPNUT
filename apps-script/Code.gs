@@ -1,6 +1,7 @@
 /** Google Apps Script backend for SME SUPNUT. Deploy as a Web app. */
 const SPREADSHEET_ID = '1RukQXEHcSTDYH4O9nRKa4qVie6UDi84hGGOJxKQLqgE';
 const SHEET_NAME = 'ชีต1';
+const PHOTO_FOLDER_ID = '1PbWWqgKDBDorh525uecKaGZD21FGSoCeR';
 const HEADERS = { district: 'เขต', account: 'Account', name: 'ชื่อร้าน', branch: 'รหัสสาขา', sku: 'SKU', value: 'ซื้อออกแล้ว' };
 
 function doGet(e) { return e && e.parameter.action === 'list' ? reply_({ ok: true, rows: list_() }) : reply_({ ok: true, service: 'SME SUPNUT API' }); }
@@ -16,9 +17,9 @@ function doPost(e) {
 function sheet_() { return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME); }
 
 // เลือกฟังก์ชันนี้แล้วกด Run หนึ่งครั้งจาก Apps Script เพื่ออนุญาต Sheets และ Drive
-function authorize_() {
+function authorize() {
   SpreadsheetApp.openById(SPREADSHEET_ID).getId();
-  DriveApp.getRootFolder().getId();
+  DriveApp.getFolderById(PHOTO_FOLDER_ID).getId();
 }
 function columns_(headers) {
   const found = {};
@@ -29,13 +30,16 @@ function columns_(headers) {
   });
   return found;
 }
-function list_() {
+function table_() {
   const sh = sheet_();
   const range = sh.getDataRange();
   const values = range.getDisplayValues();
   const headerIndex = values.findIndex(row => row.includes(HEADERS.district) && row.includes(HEADERS.value));
   if (headerIndex < 0) throw new Error('ไม่พบแถวหัวตาราง');
-  const c = columns_(values[headerIndex]);
+  return { sh, range, values, headerIndex, c: columns_(values[headerIndex]) };
+}
+function list_() {
+  const { sh, range, values, headerIndex, c } = table_();
   const firstDataRow = range.getRow() + headerIndex + 1;
   const photoRows = new Set(sh.getImages().filter(image => image.getAnchorCell().getColumn() === c.value + 1).map(image => image.getAnchorCell().getRow()));
   const rawValues = range.getValues();
@@ -52,9 +56,7 @@ function save_(body) {
   const row = Number(decoded[0]);
   const branch = decodeURIComponent(decoded[1]);
   const name = decodeURIComponent(decoded.slice(2).join('|'));
-  const sh = sheet_();
-  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0];
-  const c = columns_(headers);
+  const { sh, c } = table_();
   if (row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
   const lock = LockService.getDocumentLock();
   lock.waitLock(15000);
@@ -69,10 +71,10 @@ function upload_(body) {
   if (body.image.dataUrl.length > 3500000) throw new Error('รูปมีขนาดใหญ่เกินไป');
   const decoded = Utilities.newBlob(Utilities.base64DecodeWebSafe(body.identity)).getDataAsString().split('|');
   const row = Number(decoded[0]); const branch = decodeURIComponent(decoded[1]); const name = decodeURIComponent(decoded.slice(2).join('|'));
-  const sh = sheet_(); const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0]; const c = columns_(headers);
+  const { sh, c } = table_();
   if (!Number.isInteger(row) || row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
   const lock = LockService.getDocumentLock(); lock.waitLock(15000);
-  try { const cell = sh.getRange(row, c.value + 1); sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove()); cell.clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); const file = DriveApp.createFile(blob); file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); const cellImage = SpreadsheetApp.newCellImage().setSourceUrl(`https://drive.google.com/uc?export=view&id=${file.getId()}`).setAltTextTitle(`รูปสาขา ${branch}`).build(); cell.setValue(cellImage); sh.setColumnWidth(c.value + 1, 160); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
+  try { const cell = sh.getRange(row, c.value + 1); sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove()); cell.clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); const file = DriveApp.getFolderById(PHOTO_FOLDER_ID).createFile(blob); file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW); const cellImage = SpreadsheetApp.newCellImage().setSourceUrl(`https://drive.google.com/uc?export=view&id=${file.getId()}`).setAltTextTitle(`รูปสาขา ${branch}`).build(); cell.setValue(cellImage); sh.setColumnWidth(c.value + 1, 160); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
   return { ok: true };
 }
 function reply_(object) { return ContentService.createTextOutput(JSON.stringify(object)).setMimeType(ContentService.MimeType.JSON); }

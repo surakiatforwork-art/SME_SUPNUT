@@ -9,6 +9,7 @@ function doGet(e) { return e && e.parameter.action === 'list' ? reply_({ ok: tru
 function doPost(e) {
   try {
     const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
+    if (body.action === 'debug') return reply_({ ok: true, effectiveUser: Session.getEffectiveUser().getEmail(), auth: ScriptApp.getAuthorizationInfo(ScriptApp.AuthMode.FULL).getAuthorizationStatus().toString() });
     if (body.action === 'list') return reply_({ ok: true, rows: list_() });
     if (body.action === 'save') return reply_(save_(body));
     if (body.action === 'upload') return reply_(upload_(body));

@@ -6,7 +6,7 @@ const HEADERS = { district: 'เขต', account: 'Account', name: 'ชื่อ
 function doGet(e) { return e && e.parameter.action === 'list' ? reply_({ ok: true, rows: list_() }) : reply_({ ok: true, service: 'SME SUPNUT API' }); }
 function doPost(e) {
   try {
-    const body = JSON.parse((e.postData && e.postData.contents) || '{}');
+    const body = JSON.parse((e && e.postData && e.postData.contents) || '{}');
     if (body.action === 'list') return reply_({ ok: true, rows: list_() });
     if (body.action === 'save') return reply_(save_(body));
     if (body.action === 'upload') return reply_(upload_(body));
@@ -27,7 +27,7 @@ function list_() {
   const sh = sheet_();
   const values = sh.getDataRange().getDisplayValues();
   const c = columns_(values.shift());
-  const photoRows = new Set(sh.getImages().filter(image => image.getAnchorColumn() === c.value + 1).map(image => image.getAnchorRow()));
+  const photoRows = new Set(sh.getImages().filter(image => image.getAnchorCell().getColumn() === c.value + 1).map(image => image.getAnchorCell().getRow()));
   return values.map((r, i) => ({
     row: i + 2,
     identity: Utilities.base64EncodeWebSafe([i + 2, encodeURIComponent(r[c.branch]), encodeURIComponent(r[c.name])].join('|')),
@@ -48,7 +48,7 @@ function save_(body) {
   const lock = LockService.getDocumentLock();
   lock.waitLock(15000);
   try {
-    sh.getImages().filter(image => image.getAnchorRow() === row && image.getAnchorColumn() === c.value + 1).forEach(image => image.remove());
+    sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove());
     sh.getRange(row, c.value + 1).setValue(body.value);
   } finally { lock.releaseLock(); }
   return { ok: true, value: body.value };
@@ -61,7 +61,7 @@ function upload_(body) {
   const sh = sheet_(); const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0]; const c = columns_(headers);
   if (row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
   const lock = LockService.getDocumentLock(); lock.waitLock(15000);
-  try { sh.getImages().filter(image => image.getAnchorRow() === row && image.getAnchorColumn() === c.value + 1).forEach(image => image.remove()); sh.getRange(row, c.value + 1).clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); sh.insertImage(blob, c.value + 1, row).setWidth(160).setHeight(220); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
+  try { sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove()); sh.getRange(row, c.value + 1).clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); sh.insertImage(blob, c.value + 1, row).setWidth(160).setHeight(220); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
   return { ok: true };
 }
 function reply_(object) { return ContentService.createTextOutput(JSON.stringify(object)).setMimeType(ContentService.MimeType.JSON); }

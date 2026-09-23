@@ -1,5 +1,5 @@
 const QUEUE_KEY = 'sme.purchaseStatusQueue.v1';
-const ALLOWED_VALUES = new Set(['ซื้อแล้ว 2', 'ซื้อแล้ว 1', 'ของหมด']);
+const ALLOWED_VALUES = new Set(['ของหมด']);
 
 export function readQueue(storage) {
   try {

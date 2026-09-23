@@ -5,7 +5,7 @@ export function filterRows(rows, { district = '', account = '', status = '', que
     && words.every(w => [r.district, r.account, r.name, r.branch].join(' ').toLocaleLowerCase('th').includes(w)));
 }
 export function validateValue(value) {
-  if (!['ซื้อแล้ว 2', 'ซื้อแล้ว 1', 'ของหมด'].includes(value)) throw new Error('กรุณาเลือกสถานะการซื้อ');
+  if (value !== 'ของหมด') throw new Error('กรุณาเลือกรายการ');
   return value;
 }
 export function readPreference(storage, key, fallback = '') { try { return storage.getItem(key) ?? fallback; } catch { return fallback; } }

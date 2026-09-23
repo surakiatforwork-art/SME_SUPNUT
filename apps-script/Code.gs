@@ -47,7 +47,10 @@ function save_(body) {
   if (row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
   const lock = LockService.getDocumentLock();
   lock.waitLock(15000);
-  try { sh.getRange(row, c.value + 1).setValue(body.value); } finally { lock.releaseLock(); }
+  try {
+    sh.getImages().filter(image => image.getAnchorRow() === row && image.getAnchorColumn() === c.value + 1).forEach(image => image.remove());
+    sh.getRange(row, c.value + 1).setValue(body.value);
+  } finally { lock.releaseLock(); }
   return { ok: true, value: body.value };
 }
 function upload_(body) {

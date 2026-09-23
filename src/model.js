@@ -1,7 +1,7 @@
 export function filterRows(rows, { district = '', account = '', status = '', query = '' }) {
   const words = query.trim().toLocaleLowerCase('th').split(/\s+/).filter(Boolean);
   return rows.filter(r => (!district || r.district === district) && (!account || r.account === account)
-    && (!status || (status === 'done' ? r.value !== '' : r.value === ''))
+    && (!status || (status === 'done' ? r.value !== '' || r.hasPhoto : r.value === '' && !r.hasPhoto))
     && words.every(w => [r.district, r.account, r.name, r.branch].join(' ').toLocaleLowerCase('th').includes(w)));
 }
 export function validateValue(value) {

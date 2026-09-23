@@ -21,6 +21,7 @@ function sheet_() { return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByNam
 function authorize() {
   SpreadsheetApp.openById(SPREADSHEET_ID).getId();
   DriveApp.getFolderById(PHOTO_FOLDER_ID).getId();
+  DriveApp.getFolderById(PHOTO_FOLDER_ID).createFile('.sme-drive-scope-check.txt', 'Drive write access verified');
 }
 // Apps Script scans method calls to determine OAuth scopes. This explicit call
 // makes the required write scope visible without creating any authorization file.

@@ -25,13 +25,17 @@ function columns_(headers) {
 }
 function list_() {
   const sh = sheet_();
-  const values = sh.getDataRange().getDisplayValues();
-  const c = columns_(values.shift());
+  const range = sh.getDataRange();
+  const values = range.getDisplayValues();
+  const headerIndex = values.findIndex(row => row.includes(HEADERS.district) && row.includes(HEADERS.value));
+  if (headerIndex < 0) throw new Error('ไม่พบแถวหัวตาราง');
+  const c = columns_(values[headerIndex]);
+  const firstDataRow = range.getRow() + headerIndex + 1;
   const photoRows = new Set(sh.getImages().filter(image => image.getAnchorCell().getColumn() === c.value + 1).map(image => image.getAnchorCell().getRow()));
-  return values.map((r, i) => ({
-    row: i + 2,
-    identity: Utilities.base64EncodeWebSafe([i + 2, encodeURIComponent(r[c.branch]), encodeURIComponent(r[c.name])].join('|')),
-    district: r[c.district], account: r[c.account], name: r[c.name], branch: r[c.branch], sku: r[c.sku], value: r[c.value], hasPhoto: photoRows.has(i + 2)
+  return values.slice(headerIndex + 1).map((r, i) => ({
+    row: firstDataRow + i,
+    identity: Utilities.base64EncodeWebSafe([firstDataRow + i, encodeURIComponent(r[c.branch]), encodeURIComponent(r[c.name])].join('|')),
+    district: r[c.district], account: r[c.account], name: r[c.name], branch: r[c.branch], sku: r[c.sku], value: r[c.value], hasPhoto: photoRows.has(firstDataRow + i)
   }));
 }
 function save_(body) {

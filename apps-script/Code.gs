@@ -14,6 +14,12 @@ function doPost(e) {
   } catch (err) { console.error(err && err.stack ? err.stack : err); return reply_({ ok: false, error: err.message || 'Server error' }); }
 }
 function sheet_() { return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME); }
+
+// เลือกฟังก์ชันนี้แล้วกด Run หนึ่งครั้งจาก Apps Script เพื่ออนุญาต Sheets และ Drive
+function authorize_() {
+  SpreadsheetApp.openById(SPREADSHEET_ID).getId();
+  DriveApp.getRootFolder().getId();
+}
 function columns_(headers) {
   const found = {};
   Object.keys(HEADERS).forEach(k => {

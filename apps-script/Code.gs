@@ -22,6 +22,11 @@ function authorize() {
   SpreadsheetApp.openById(SPREADSHEET_ID).getId();
   DriveApp.getFolderById(PHOTO_FOLDER_ID).getId();
 }
+// Apps Script scans method calls to determine OAuth scopes. This explicit call
+// makes the required write scope visible without creating any authorization file.
+function requireDriveWriteScope_() {
+  if (false) DriveApp.createFile('scope-check.txt', '');
+}
 function columns_(headers) {
   const found = {};
   Object.keys(HEADERS).forEach(k => {

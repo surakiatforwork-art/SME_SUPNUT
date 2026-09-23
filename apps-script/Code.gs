@@ -11,7 +11,7 @@ function doPost(e) {
     if (body.action === 'save') return reply_(save_(body));
     if (body.action === 'upload') return reply_(upload_(body));
     return reply_({ ok: false, error: 'Unknown action' });
-  } catch (err) { return reply_({ ok: false, error: err.message || 'Server error' }); }
+  } catch (err) { console.error(err && err.stack ? err.stack : err); return reply_({ ok: false, error: err.message || 'Server error' }); }
 }
 function sheet_() { return SpreadsheetApp.openById(SPREADSHEET_ID).getSheetByName(SHEET_NAME); }
 function columns_(headers) {

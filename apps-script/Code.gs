@@ -59,9 +59,9 @@ function upload_(body) {
   const decoded = Utilities.newBlob(Utilities.base64DecodeWebSafe(body.identity)).getDataAsString().split('|');
   const row = Number(decoded[0]); const branch = decodeURIComponent(decoded[1]); const name = decodeURIComponent(decoded.slice(2).join('|'));
   const sh = sheet_(); const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getDisplayValues()[0]; const c = columns_(headers);
-  if (row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
+  if (!Number.isInteger(row) || row < 2 || sh.getRange(row, c.branch + 1).getDisplayValue() !== branch || sh.getRange(row, c.name + 1).getDisplayValue() !== name) throw new Error('รายการถูกเปลี่ยนแปลง กรุณาโหลดข้อมูลใหม่ก่อนบันทึก');
   const lock = LockService.getDocumentLock(); lock.waitLock(15000);
-  try { sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove()); sh.getRange(row, c.value + 1).clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); sh.insertImage(blob, c.value + 1, row).setWidth(160).setHeight(220); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
+  try { const cell = sh.getRange(row, c.value + 1); sh.getImages().filter(image => image.getAnchorCell().getRow() === row && image.getAnchorCell().getColumn() === c.value + 1).forEach(image => image.remove()); cell.clearContent(); const blob = Utilities.newBlob(Utilities.base64Decode(body.image.dataUrl.split(',')[1]), body.image.type || 'image/jpeg', body.image.name || `store-${row}.jpg`); const image = sh.insertImage(blob, cell.getColumn(), cell.getRow()); image.setAnchorCell(cell).setWidth(160).setHeight(220); sh.setRowHeight(row, 220); } finally { lock.releaseLock(); }
   return { ok: true };
 }
 function reply_(object) { return ContentService.createTextOutput(JSON.stringify(object)).setMimeType(ContentService.MimeType.JSON); }

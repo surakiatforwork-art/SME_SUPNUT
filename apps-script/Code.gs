@@ -1,7 +1,8 @@
 /** Google Apps Script backend for SME SUPNUT. Deploy as a Web app. */
 const SPREADSHEET_ID = '1RukQXEHcSTDYH4O9nRKa4qVie6UDi84hGGOJxKQLqgE';
 const SHEET_NAME = 'ชีต1';
-const PHOTO_FOLDER_ID = '1PbWWqgKDBDorh525uecKaGZD21FGSoCeR';
+// โฟลเดอร์ "smecvs" ที่เปิดได้ด้วยบัญชีเดียวกับ Apps Script
+const PHOTO_FOLDER_ID = '1P2BSJkx2CjQF8T5dUyvKHLa7kgnJW9gr';
 const HEADERS = { district: 'เขต', account: 'Account', name: 'ชื่อร้าน', branch: 'รหัสสาขา', sku: 'SKU', value: 'ซื้อออกแล้ว' };
 
 function doGet(e) { return e && e.parameter.action === 'list' ? reply_({ ok: true, rows: list_() }) : reply_({ ok: true, service: 'SME SUPNUT API' }); }
